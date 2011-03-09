@@ -6,7 +6,7 @@ import (
   "crypto/tls"
   "io"
   "fmt"
-   "os"
+  "os"
   "xml"
 )
 
@@ -30,10 +30,11 @@ func NewClient(user, password string) (client *Client, failure os.Error) {
     }
   }()
 
-  tlsconn, err := tls.Dial("tcp", "", "talk.google.com:https", nil)
+  hostname := "talk.google.com:https"
+  tlsconn, err := tls.Dial("tcp", "", hostname, nil)
 
   if err != nil {
-    panic(err)
+    panic(os.NewError(fmt.Sprintf("Failed to connect to %s (%s)", hostname, err)))
   }
 
   client = &Client{
@@ -48,17 +49,34 @@ func NewClient(user, password string) (client *Client, failure os.Error) {
 }
 
 func (client *Client) writef(format string, args ...interface{}) {
-  fmt.Fprintf(client.tls, format, args...)
+  buf := bytes.NewBufferString(fmt.Sprintf(format + "\n", args...))
+
+  client.log("Sending %s", buf.String())
+
+  if num, err := client.tls.Write(buf.Bytes()); err != nil {
+    panic(os.NewError(fmt.Sprintf("Failed to write to server (%s)", err)))
+  } else {
+    client.log("Wrote %d bytes to server", num)
+  }
 }
 
 func (client *Client) authenticate(login, password string) {
   auth := NewAuth(login, password)
 
-  client.writef("<?xml version='1.0'?><stream:stream to='%s' xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:client' version='1.0' />", auth.domain)
+  client.writef("<?xml version='1.0'?>")
+  client.writef("<stream:stream to='%s' xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:client' version='1.0' />", auth.domain)
 
   features := client.readUntilEOF()
 
-  client.log("Gotten folloiwing features: %s", features)
+  client.log("Gotten following features: %s", features)
+
+  client.writef("<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN' xmlns:ga='http://www.google.com/talk/protocol/auth' ga:client-uses-full-bind-result='true'>AGp1bGlldAByMG0zMG15cjBtMzA=</auth>")
+
+  //client.writef("<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN'>%s</auth>\n", auth.Base64())
+
+  auth_response := client.readUntilEOF()
+
+  client.log("Auth response: %s\n", auth_response)
 }
 
 func (client *Client) readUntilEOF() string {
@@ -69,7 +87,10 @@ func (client *Client) readUntilEOF() string {
 
     switch (err) {
       case nil: buf.WriteByte(b)
-      case os.EOF: break L
+      case os.EOF:
+        if buf.Len() > 0 {
+          break L
+        }
       default: panic(os.NewError(fmt.Sprintf("Failed to read from server: %s\n", err)))
     }
   }
