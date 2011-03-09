@@ -12,7 +12,5 @@ func main() {
     fmt.Printf("Failed due to: %s\n", err)
   }
 
-  fmt.Printf("Hello world!\n")
-
-  fmt.Printf("Client: %x\n", client)
+  fmt.Printf("Client: %x\nError: %s\n", client, err)
 }
