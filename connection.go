@@ -70,7 +70,7 @@ func (client *Client) authenticate(login, password string) {
 
   client.log("Gotten following features: %s", features)
 
-  client.writef("<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN' xmlns:ga='http://www.google.com/talk/protocol/auth' ga:client-uses-full-bind-result='true'>AGp1bGlldAByMG0zMG15cjBtMzA=</auth>")
+  client.writef("<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN' xmlns:ga='http://www.google.com/talk/protocol/auth' ga:client-uses-full-bind-result='true'>%s</auth>", auth.Base64())
 
   //client.writef("<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN'>%s</auth>\n", auth.Base64())
 
