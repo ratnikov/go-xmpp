@@ -1,12 +1,12 @@
 package xmpp;
 
 import (
-  "bufio"
   "bytes"
   "crypto/tls"
   "io"
   "fmt"
   "os"
+  "net"
   "xml"
 )
 
@@ -30,76 +30,72 @@ func NewClient(user, password string) (client *Client, failure os.Error) {
     }
   }()
 
-  hostname := "talk.google.com:https"
-  tlsconn, err := tls.Dial("tcp", "", hostname, nil)
+  c := &Client{}
+
+
+  hostname := "talk.google.com"
+
+  if conn, err := net.Dial("tcp", "", "talk.google.com:5222"); err != nil {
+    fmt.Printf("crap!!! %s\n", err)
+  } else {
+    c.write(conn, "<?xml version='1.0'?>")
+    c.write(conn, "<stream:stream to='gmail.com' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' version='1.0'>")
+
+    fmt.Printf("Read: %s\n", client.read(conn))
+
+    // assuming need to start tls
+    c.write(conn, "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls' />")
+
+    fmt.Printf("Read: %s\n", client.read(conn))
+  }
+
+  tlsconn, err := tls.Dial("tcp", "", hostname + ":https", nil)
 
   if err != nil {
     panic(os.NewError(fmt.Sprintf("Failed to connect to %s (%s)", hostname, err)))
   }
 
-  client = &Client{
-    tls: tlsconn,
-    tls_read: bufio.NewReader(tlsconn),
-    parser: xml.NewParser(tlsconn),
-  }
+  tlsconn.Handshake()
 
-  client.authenticate(user, password)
+  client.write(tlsconn, "<stream:stream to='gmail.com' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' version='1.0'>")
+
+  client.read(tlsconn)
+  client.read(tlsconn)
+
+  auth := NewAuth(user, password)
+
+  client.write(tlsconn, "<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN' xmlns:ga='http://www.google.com/talk/protocol/auth' ga:client-uses-full-bind-result='true'>%s</auth>", auth.Base64())
+
+  client.read(tlsconn)
+
+  return client, nil
+}
+
+func (client *Client) read(conn io.Reader) (out string) {
+  buf := make([]byte, 2048)
+
+  num, err := conn.Read(buf)
+
+  if err != nil {
+    panic("Failed to read....")
+  } else {
+    fmt.Printf("Read %d bytes: %s\n", num, buf)
+  }
 
   return
 }
 
-func (client *Client) writef(format string, args ...interface{}) {
+
+func (client *Client) write(conn io.Writer, format string, args ...interface{}) {
   buf := bytes.NewBufferString(fmt.Sprintf(format + "\n", args...))
 
-  client.log("Sending %s", buf.String())
-  client.tls.Error("zxcvzxcv")
+  client.log("Sending %s\n", buf.String())
 
-  if num, err := client.tls.Write(buf.Bytes()); err != nil {
-    panic(os.NewError(fmt.Sprintf("Failed to write to server (%s)", err)))
+  if num, err := conn.Write(buf.Bytes()); err != nil {
+    panic(os.NewError(fmt.Sprintf("Failed to write... (%s)", err)))
   } else {
-    client.log("Wrote %d bytes to server", num)
+    client.log("Wrote %d bytes to connection", num)
   }
-}
-
-func (client *Client) authenticate(login, password string) {
-  auth := NewAuth(login, password)
-
-  client.writef("<?xml version='1.0'?>")
-  client.writef("<stream:stream to='%s' xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:client' version='1.0' />", auth.domain)
-
-
-  client.tls.Error("boo")
-  features := client.readUntilEOF()
-
-  client.log("Gotten following features: %s", features)
-  client.tls.Error("bar")
-
-  client.writef("<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN' xmlns:ga='http://www.google.com/talk/protocol/auth' ga:client-uses-full-bind-result='true'>%s</auth>", auth.Base64())
-
-  //client.writef("<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN'>%s</auth>\n", auth.Base64())
-
-  auth_response := client.readUntilEOF()
-
-  client.log("Auth response: %s\n", auth_response)
-}
-
-func (client *Client) readUntilEOF() string {
-  var buf bytes.Buffer
-
-  L: for {
-    b, err := client.tls_read.ReadByte()
-
-    switch (err) {
-      case nil: buf.WriteByte(b)
-      case os.EOF:
-        if buf.Len() > 0 {
-          break L
-        }
-      default: panic(os.NewError(fmt.Sprintf("Failed to read from server: %s\n", err)))
-    }
-  }
-
-  return buf.String()
 }
 
 func (client *Client) log(format string, args ...interface{}) {

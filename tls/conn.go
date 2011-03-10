@@ -685,12 +685,13 @@ func (c *Conn) Error(msg string) {
   fmt.Printf("%s Error is currently: %s\n", msg, c.error())
 }
 
+func (c *Conn) ResetError() {
+  c.err = nil
+}
+
 // Write writes data to the connection.
 func (c *Conn) Write(b []byte) (n int, err os.Error) {
-  fmt.Printf("About to write %s...\n", b)
-  fmt.Printf("errorz: %s\n", c.error())
 	if err = c.Handshake(); err != nil {
-          fmt.Printf("Shaking hands...\n")
 		return
 	}
 
@@ -746,11 +747,9 @@ func (c *Conn) Close() os.Error {
 // Most uses of this package need not call Handshake
 // explicitly: the first Read or Write will call it automatically.
 func (c *Conn) Handshake() os.Error {
-  fmt.Printf("Errorzz: %s\n", c.error())
 	c.handshakeMutex.Lock()
 	defer c.handshakeMutex.Unlock()
 	if err := c.error(); err != nil {
-          fmt.Printf("Had an error....\n")
 		return err
 	}
 	if c.handshakeComplete {
