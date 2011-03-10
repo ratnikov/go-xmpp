@@ -52,6 +52,7 @@ func (client *Client) writef(format string, args ...interface{}) {
   buf := bytes.NewBufferString(fmt.Sprintf(format + "\n", args...))
 
   client.log("Sending %s", buf.String())
+  client.tls.Error("zxcvzxcv")
 
   if num, err := client.tls.Write(buf.Bytes()); err != nil {
     panic(os.NewError(fmt.Sprintf("Failed to write to server (%s)", err)))
@@ -66,9 +67,12 @@ func (client *Client) authenticate(login, password string) {
   client.writef("<?xml version='1.0'?>")
   client.writef("<stream:stream to='%s' xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:client' version='1.0' />", auth.domain)
 
+
+  client.tls.Error("boo")
   features := client.readUntilEOF()
 
   client.log("Gotten following features: %s", features)
+  client.tls.Error("bar")
 
   client.writef("<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN' xmlns:ga='http://www.google.com/talk/protocol/auth' ga:client-uses-full-bind-result='true'>%s</auth>", auth.Base64())
 
