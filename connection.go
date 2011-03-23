@@ -11,8 +11,8 @@ import (
 type Client struct {
   hostname string
   conn net.Conn
+  listeners listenerList
 }
-
 
 func NewClient(hostname, user, password string) (client *Client, failure os.Error) {
   failure = nil
@@ -32,31 +32,22 @@ func NewClient(hostname, user, password string) (client *Client, failure os.Erro
   client.startTls()
   client.authenticate(NewAuth(user, password))
 
-  client.Message("ratnikov@gmail.com", "Write me something and I will write back! (Please send 2 messages at first....)")
-
-  client.read()
-
-  for {
-    raw := client.read()
-
-    var recipient, received string
-
-    if match := regexp.MustCompile("to=\"([^/\"]*)/").FindStringSubmatch(raw); len(match) > 1 {
-      recipient = match[1]
-    }
-
-    if match := regexp.MustCompile("<body>(.*)</body>").FindStringSubmatch(raw); len(match) > 1 {
-      received = match[1]
-    }
-
-    message := "You wrote: " + received
-
-    fmt.Printf("Sending message %s to %s", message, recipient)
-
-    client.Message(recipient, message)
-  }
-
   return client, nil
+}
+
+func (client *Client) Subscribe(l Listener) {
+  client.listeners.subscribe(l)
+}
+
+func (client *Client) Loop() {
+  for {
+    msg := client.read()
+
+    switch {
+      case regexp.MustCompile("^<message").MatchString(msg): client.listeners.fireOnMessage(msg)
+      default: client.listeners.fireOnUnknown(msg)
+    }
+  }
 }
 
 func (client *Client) startTls() {
