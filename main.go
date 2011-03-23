@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-  client, err := xmpp.NewClient("ratnikov@gmail.com", "secret")
+  client, err := xmpp.NewClient("talk.google.com", "ratnikov@gmail.com", "secret")
 
   if err != nil {
     fmt.Printf("Failed due to: %s\n", err)
