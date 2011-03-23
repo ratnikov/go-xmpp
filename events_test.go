@@ -2,19 +2,27 @@ package xmpp
 
 import "testing"
 
-type testListener struct {
+type testMessageListener struct {
   message string
 }
 
-func (l *testListener) onMessage(msg string) {
+type testUnknownListener struct {
+  unknown string
+}
+
+func (l *testMessageListener) onMessage(msg string) {
   l.message = msg
+}
+
+func (l* testUnknownListener) onUnknown(msg string) {
+  l.unknown = msg
 }
 
 func TestFireOnMessage(t *testing.T) {
   list := listenerList{}
 
-  l1 := testListener{}
-  l2 := testListener{}
+  l1 := testMessageListener{}
+  l2 := testMessageListener{}
 
   list.subscribe(&l1)
 
@@ -30,4 +38,17 @@ func TestFireOnMessage(t *testing.T) {
 
   assertEqual(t, "two", l1.message, "Should forward the second message as well")
   assertEqual(t, "two", l2.message, "Should fire for second listener as well")
+}
+
+func TestFireOnUnknown(t *testing.T) {
+
+  list := listenerList{}
+
+  l := testUnknownListener{}
+
+  list.subscribe(&l)
+
+  list.fireOnUnknown("one")
+
+  assertEqual(t, "one", l.unknown, "Should have fired onUnknown")
 }
