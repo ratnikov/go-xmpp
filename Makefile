@@ -1,7 +1,7 @@
 include $(GOROOT)/src/Make.inc
 
 TARG=xmpp
-GOFILES=auth.go connection.go
+GOFILES=auth.go connection.go util.go
 
 net.a:
 	cd net && gomake

@@ -18,6 +18,23 @@ type Client struct {
   err os.Error
 }
 
+func startTls(host string) {
+  if conn, err := net.Dial("tcp", "", "talk.google.com:5222"); err != nil {
+    die("Failed to establish plain connection: %s", err)
+  } else {
+    write(conn, "<?xml version='1.0'?>")
+    write(conn, "<stream:stream to='gmail.com' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' version='1.0'>")
+
+    fmt.Printf("Read: %s\n", read(conn))
+
+    // assuming need to start tls
+    write(conn, "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls' />")
+
+    fmt.Printf("Read: %s\n", read(conn))
+  }
+}
+
+
 func NewClient(user, password string) (client *Client, failure os.Error) {
   failure = nil
   defer func() {
@@ -34,10 +51,11 @@ func NewClient(user, password string) (client *Client, failure os.Error) {
   client = &Client{}
 
 
+  
   hostname := "talk.google.com"
 
   if conn, err := net.Dial("tcp", "", "talk.google.com:5222"); err != nil {
-    fmt.Printf("crap!!! %s\n", err)
+    die("Failed to establish plain connection: %s", err)
   } else {
     client.write(conn, "<?xml version='1.0'?>")
     client.write(conn, "<stream:stream to='gmail.com' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' version='1.0'>")
@@ -80,6 +98,8 @@ func NewClient(user, password string) (client *Client, failure os.Error) {
   client.read(tlsconn)
   client.read(tlsconn)
   client.read(tlsconn)
+
+  client.Message("ratnikov@gmail.com", "Write me something and I will write back! (Please send 2 messages at first....)")
 
   client.read(tlsconn)
 
