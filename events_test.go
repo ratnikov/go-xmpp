@@ -18,37 +18,42 @@ func (l* testUnknownListener) onUnknown(msg string) {
   l.unknown = msg
 }
 
-func TestFireOnMessage(t *testing.T) {
+func TestOnMessage(t *testing.T) {
   list := listenerList{}
 
-  l1 := testMessageListener{}
-  l2 := testMessageListener{}
+  var msg1, msg2 string
 
-  list.subscribe(&l1)
+  list.onMessage(func(msg string) {
+    msg1 = msg
+  })
 
-  assertEqual(t, "", l1.message, "Should not fire any events")
+  assertEqual(t, "", msg1, "Should not fire any events")
 
   list.fireOnMessage("one")
 
-  assertEqual(t, "one", l1.message, "Should forward the fired message")
+  assertEqual(t, "one", msg1, "Should forward the fired message")
 
-  list.subscribe(&l2)
+  list.onMessage(func(msg string) {
+    msg2 = msg
+  })
 
   list.fireOnMessage("two")
 
-  assertEqual(t, "two", l1.message, "Should forward the second message as well")
-  assertEqual(t, "two", l2.message, "Should fire for second listener as well")
+  assertEqual(t, "two", msg1, "Should forward the second message as well")
+  assertEqual(t, "two", msg2, "Should fire for second listener as well")
 }
 
-func TestFireOnUnknown(t *testing.T) {
+func TestOnUnknown(t *testing.T) {
 
   list := listenerList{}
 
-  l := testUnknownListener{}
+  msg1 := ""
 
-  list.subscribe(&l)
+  list.onUnknown(func(msg string) {
+    msg1 = msg
+  })
 
   list.fireOnUnknown("one")
 
-  assertEqual(t, "one", l.unknown, "Should have fired onUnknown")
+  assertEqual(t, "one", msg1, "Should have fired onUnknown")
 }

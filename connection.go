@@ -35,8 +35,8 @@ func NewClient(hostname, user, password string) (client *Client, failure os.Erro
   return client, nil
 }
 
-func (client *Client) Subscribe(l Listener) {
-  client.listeners.subscribe(l)
+func (client *Client) OnMessage(callback func(string)) {
+  client.listeners.onMessage(callback);
 }
 
 func (client *Client) Loop() {

@@ -24,7 +24,9 @@ func main() {
   if err != nil {
     fmt.Printf("Failed due to: %s\n", err)
   } else {
-    client.Subscribe(&bot)
+    client.OnMessage(func(msg string ) {
+      bot.onMessage(msg)
+    })
 
     client.Message("ratnikov@gmail.com", "Hello world!")
 
