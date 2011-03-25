@@ -27,14 +27,12 @@ func (buf *testIO) Reset() {
   buf.out.Reset()
 }
 
+func (buf *testIO) PushString(str string) {
+  buf.in.Write(bytes.NewBufferString(str).Bytes())
+}
+
 func (buf *testIO) PushFixture(fixture string, data interface{}) {
-  str := readFixture(fixture, data)
-
-  var byt []byte
-
-  byt = bytes.NewBufferString(str).Bytes()
-
-  buf.in.Write(byt)
+  buf.PushString(readFixture(fixture, data))
 }
 
 func (buf *testIO) PopString() string {
@@ -67,7 +65,27 @@ func TestLoop(t *testing.T) {
   // if we got here, then loop must have existed, and we're good
 }
 
-func TestMessage(t *testing.T) {
+func TestClientOnAny(t *testing.T) {
+  testio, client := setupClient()
+
+  var received string
+
+  client.OnAny(func(msg string) {
+    received = msg
+  })
+
+  testio.PushString("<hello world! />")
+  client.Loop()
+
+  assertMatch(t, "hello world!", received, "Should return the unknown message")
+
+  testio.PushString("<message><body>hello world!</body></message>")
+  client.Loop()
+
+  assertMatch(t, "message.*body.*hello world!.*/body.*/message", received, "Should return the message as well")
+}
+
+func TestClientOnMessage(t *testing.T) {
   testio, client := setupClient()
 
   testio.PushFixture("message", fixtureMessage{
