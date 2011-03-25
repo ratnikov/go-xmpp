@@ -1,26 +1,26 @@
 package xmpp
 
 type listenerList struct {
-  onMessageListeners []func(message string)
-  onUnknownListeners []func(unknown string)
+  messageCallbacks []func(message string)
+  unknownCallbacks []func(unknown string)
 }
 
 func (list *listenerList) onMessage(callback func(string)) {
-  list.onMessageListeners = append(list.onMessageListeners, callback)
+  list.messageCallbacks = append(list.messageCallbacks, callback)
 }
 
 func (list *listenerList) onUnknown(callback func(string)) {
-  list.onUnknownListeners = append(list.onUnknownListeners, callback)
+  list.unknownCallbacks = append(list.unknownCallbacks, callback)
 }
 
 func (list *listenerList) fireOnMessage(msg string) {
-  for i := range list.onMessageListeners {
-    list.onMessageListeners[i](msg)
+  for i := range list.messageCallbacks {
+    list.messageCallbacks[i](msg)
   }
 }
 
 func (list *listenerList) fireOnUnknown(msg string) {
-  for i := range list.onUnknownListeners {
-    list.onUnknownListeners[i](msg)
+  for i := range list.unknownCallbacks {
+    list.unknownCallbacks[i](msg)
   }
 }
