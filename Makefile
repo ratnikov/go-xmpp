@@ -1,7 +1,7 @@
 include $(GOROOT)/src/Make.inc
 
 TARG=xmpp
-GOFILES=auth.go connection.go events.go util.go test_util.go
+GOFILES=auth.go client.go events.go util.go test_util.go
 
 _xmpp_:
 	6g -o _xmpp_.6 $(GOFILES)

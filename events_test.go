@@ -2,22 +2,6 @@ package xmpp
 
 import "testing"
 
-type testMessageListener struct {
-  message string
-}
-
-type testUnknownListener struct {
-  unknown string
-}
-
-func (l *testMessageListener) onMessage(msg string) {
-  l.message = msg
-}
-
-func (l* testUnknownListener) onUnknown(msg string) {
-  l.unknown = msg
-}
-
 func TestOnMessage(t *testing.T) {
   list := listenerList{}
 
