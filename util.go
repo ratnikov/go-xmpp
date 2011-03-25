@@ -11,13 +11,7 @@ import (
 func read(in io.Reader) (string, os.Error) {
   buf := make([]byte, 2048)
 
-  num, err := in.Read(buf)
-
-  if err != nil {
-    fmt.Printf("Error occured (%s). Read %d bytes anyway: %s\n", err, num, buf)
-  } else {
-    fmt.Printf("Read %d bytes: %s\n", num, buf)
-  }
+  _, err := in.Read(buf)
 
   return bytes.NewBuffer(buf).String(), err
 }

@@ -108,15 +108,10 @@ func (client *Client) authenticate(auth *Auth) {
 }
 
 func (client *Client) read() (string, os.Error) {
-  msg, err := read(client.conn)
-
-  log(">> " + msg)
-
-  return msg, err
+  return read(client.conn)
 }
 
 func (client *Client) write(format string, args ...interface{}) int {
-  log("<< " + format, args...)
   return write(client.conn, format, args...)
 }
 

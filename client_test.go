@@ -67,6 +67,26 @@ func TestLoop(t *testing.T) {
   // if we got here, then loop must have existed, and we're good
 }
 
+func TestMessage(t *testing.T) {
+  testio, client := setupClient()
+
+  testio.PushFixture("message", fixtureMessage{
+    Body: "Hello world!",
+    From: "joe@example.com",
+    To: "sam@example.com" })
+
+  var receivedMsg string
+  client.OnMessage(func(msg string) {
+    receivedMsg = msg
+  })
+
+  client.Loop()
+
+  assertMatch(t, "<body>Hello world!</body>", receivedMsg, "Should include the message")
+  assertMatch(t, "to=\"sam@example.com\"", receivedMsg, "Should include To")
+  assertMatch(t, "from=\"joe@example.com\"", receivedMsg, "Should include From")
+}
+
 func readFixture(filename string, data interface{}) string {
   buf := bytes.NewBufferString("")
 

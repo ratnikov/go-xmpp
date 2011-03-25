@@ -1,0 +1,6 @@
+<message type="chat" id="{Botid}" to="{To}" from="{From}">
+  <active xmlns="http://jabber.org/protocol/chatstates"/>
+  <body>{Body}</body>
+  <nos:x value="disabled" xmlns:nos="google:nosave"/>
+  <arc:record otr="false" xmlns:arc="http://jabber.org/protocol/archive"/>
+</message>
