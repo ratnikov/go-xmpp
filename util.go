@@ -8,7 +8,7 @@ import (
   "os"
 )
 
-func read(in io.Reader) (out string) {
+func read(in io.Reader) (string, os.Error) {
   buf := make([]byte, 2048)
 
   num, err := in.Read(buf)
@@ -19,7 +19,16 @@ func read(in io.Reader) (out string) {
     fmt.Printf("Read %d bytes: %s\n", num, buf)
   }
 
-  return bytes.NewBuffer(buf).String()
+  return bytes.NewBuffer(buf).String(), err
+}
+
+func mustRead(in io.Reader) (out string) {
+  var err os.Error
+  if out, err = read(in); err != nil {
+    die("Failed to read (%s)", err)
+  }
+
+  return
 }
 
 func write(out io.Writer, format string, args ...interface{}) int {

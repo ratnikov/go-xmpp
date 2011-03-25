@@ -3,6 +3,7 @@ package xmpp;
 import (
   "crypto/tls"
   "fmt"
+  "io"
   "os"
   "regexp"
   "net"
@@ -10,7 +11,7 @@ import (
 
 type Client struct {
   hostname string
-  conn net.Conn
+  conn io.ReadWriter
   listeners listenerList
 }
 
@@ -39,15 +40,20 @@ func (client *Client) OnMessage(callback func(string)) {
   client.listeners.onMessage(callback);
 }
 
-func (client *Client) Loop() {
+func (client *Client) Loop() os.Error {
   for {
-    msg := client.read()
+    if msg, err := client.read(); err != nil {
+      return err
+    } else {
 
-    switch {
-      case regexp.MustCompile("^<message").MatchString(msg): client.listeners.fireOnMessage(msg)
-      default: client.listeners.fireOnUnknown(msg)
+      switch {
+        case regexp.MustCompile("^<message").MatchString(msg): client.listeners.fireOnMessage(msg)
+        default: client.listeners.fireOnUnknown(msg)
+      }
     }
   }
+
+  return nil
 }
 
 func (client *Client) startTls() {
@@ -61,11 +67,11 @@ func (client *Client) startTls() {
   write(plain_conn, "<?xml version='1.0'?>")
   write(plain_conn, "<stream:stream to='gmail.com' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' version='1.0'>")
 
-  log("Read: %s", read(plain_conn))
+  log("Read: %s (%s)", mustRead(plain_conn))
 
   // assuming need to start tls
   write(plain_conn, "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls' />")
-  log("Read: %s", read(plain_conn))
+  log("Read: %s", mustRead(plain_conn))
 
   // assuming the server asked to proceed
   if client.conn, err = tls.Dial("tcp", "", client.hostname + ":https", nil); err != nil {
@@ -101,10 +107,12 @@ func (client *Client) authenticate(auth *Auth) {
   // anyhow, assuming authentication is complete
 }
 
-func (client *Client) read() string {
-  msg := read(client.conn)
+func (client *Client) read() (string, os.Error) {
+  msg, err := read(client.conn)
+
   log(">> " + msg)
-  return msg
+
+  return msg, err
 }
 
 func (client *Client) write(format string, args ...interface{}) int {
