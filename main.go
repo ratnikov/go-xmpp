@@ -24,7 +24,11 @@ func main() {
   if err != nil {
     fmt.Printf("Failed due to: %s\n", err)
   } else {
-    client.OnMessage(func(msg string ) {
+    client.OnAny(func(msg string) {
+      log(msg)
+    })
+
+    client.OnMessage(func(msg string) {
       bot.onMessage(msg)
     })
 
@@ -35,5 +39,5 @@ func main() {
 }
 
 func log(format string, args ...interface{}) {
-  fmt.Printf("MAIN LOG: " + format, args...)
+  fmt.Printf("MAIN LOG: " + format + "\n", args...)
 }
