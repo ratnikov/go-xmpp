@@ -1,10 +1,10 @@
 include $(GOROOT)/src/Make.inc
 
 TARG=xmpp
-GOFILES=auth connection events util test_util
+GOFILES=auth.go connection.go events.go util.go test_util.go
 
 _xmpp_:
-	6g -o _xmpp_.6 $(addsuffix .go,$(GOFILES))
+	6g -o _xmpp_.6 $(GOFILES)
 
 _obj:
 	mkdir _obj
