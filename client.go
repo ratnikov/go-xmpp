@@ -5,7 +5,6 @@ import (
   "fmt"
   "io"
   "os"
-  "regexp"
   "net"
 )
 
@@ -40,19 +39,20 @@ func (client *Client) OnAny(callback func(string)) {
   client.listeners.onAny(callback)
 }
 
-func (client *Client) OnMessage(callback func(string)) {
+func (client *Client) OnMessage(callback func(Message)) {
   client.listeners.onMessage(callback)
 }
 
 func (client *Client) Loop() os.Error {
   for {
-    if msg, err := client.read(); err != nil {
+    if read, err := client.read(); err != nil {
       return err
     } else {
 
-      switch {
-        case regexp.MustCompile("^<message").MatchString(msg): client.listeners.fireOnMessage(msg)
-        default: client.listeners.fireOnUnknown(msg)
+      if msg := NewMessage(read); msg != nil {
+        client.listeners.fireOnMessage(msg)
+      } else {
+        client.listeners.fireOnUnknown(read)
       }
     }
   }

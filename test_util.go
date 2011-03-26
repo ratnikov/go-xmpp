@@ -5,6 +5,12 @@ import (
   "regexp"
 )
 
+func should(t *testing.T, message string, checker func() bool) {
+  if !checker() {
+    t.Fatalf(message)
+  }
+}
+
 func assertEqual(t *testing.T, expected, actual interface{}, message string) {
   if expected != actual {
     t.Fatalf("Expected <%s> but got <%s>", expected, actual)

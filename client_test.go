@@ -93,16 +93,16 @@ func TestClientOnMessage(t *testing.T) {
     From: "joe@example.com",
     To: "sam@example.com" })
 
-  var receivedMsg string
-  client.OnMessage(func(msg string) {
-    receivedMsg = msg
+  var received *Message
+  client.OnMessage(func(msg Message) {
+    received = &msg
   })
 
   client.Loop()
 
-  assertMatch(t, "<body>Hello world!</body>", receivedMsg, "Should include the message")
-  assertMatch(t, "to=\"sam@example.com\"", receivedMsg, "Should include To")
-  assertMatch(t, "from=\"joe@example.com\"", receivedMsg, "Should include From")
+  assertMatch(t, "Hello world!", received.Body(), "Should include the message")
+  assertMatch(t, "sam@example.com", received.To(), "Should include To")
+  assertMatch(t, "joe@example.com", received.From(), "Should include From")
 }
 
 func readFixture(filename string, data interface{}) string {

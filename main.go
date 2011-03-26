@@ -5,20 +5,7 @@ import (
   "xmpp"
 )
 
-type Bot struct {
-}
-
-func (b *Bot) onMessage(message string) {
-  log("Bot received message: %s", message)
-}
-
-func (b *Bot) onUnkown(msg string) {
-  log("Bot received unsupported message: %s", msg)
-}
-
 func main() {
-  bot := Bot{}
-
   client, err := xmpp.NewClient("talk.google.com", "xmpp.chatterbox@gmail.com", "XXX")
 
   if err != nil {
@@ -28,8 +15,8 @@ func main() {
       log(msg)
     })
 
-    client.OnMessage(func(msg string) {
-      bot.onMessage(msg)
+    client.OnMessage(func(msg xmpp.Message) {
+      log("Got a message from %s to %s: %s\n", msg.From(), msg.To(), msg.Body())
     })
 
     client.Message("ratnikov@gmail.com", "Hello world!")
