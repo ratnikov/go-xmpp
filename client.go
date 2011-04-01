@@ -141,6 +141,10 @@ func (client *Client) write(format string, args ...interface{}) int {
   return write(client.conn, format, args...)
 }
 
-func (client *Client) Message(recipient, msg string) {
-  client.write("<message type='chat' id='xmpp-bot1029' to='%s'><body>%s</body></message>", recipient, msg)
+func (client *Client) Send(msg string) {
+  client.write(msg)
+}
+
+func (client *Client) SendChat(to, msg string) {
+  client.write("<message type='chat' id='xmpp-bot1029' to='%s'><body>%s</body></message>", to, msg)
 }
