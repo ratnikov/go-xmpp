@@ -7,7 +7,7 @@ import (
 
 func should(t *testing.T, message string, checker func() bool) {
   if !checker() {
-    t.Fatalf(message)
+    t.Fatalf("Should " + message)
   }
 }
 

@@ -43,6 +43,10 @@ func (client *Client) OnMessage(callback func(Message)) {
   client.listeners.onMessage(callback)
 }
 
+func (client *Client) OnUnknown(callback func(string)) {
+  client.listeners.onUnknown(callback)
+}
+
 func (client *Client) Loop() os.Error {
   for {
     if read, err := client.read(); err != nil {

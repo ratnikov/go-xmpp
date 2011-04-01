@@ -4,6 +4,7 @@ import (
   "bytes"
   "fmt"
   "os"
+  "regexp"
   "template"
   "testing"
 )
@@ -100,9 +101,31 @@ func TestClientOnMessage(t *testing.T) {
 
   client.Loop()
 
+  should(t, "have invoked onMessage callback", func() bool {
+    return received != nil
+  })
+
   assertMatch(t, "Hello world!", received.Body(), "Should include the message")
   assertMatch(t, "sam@example.com", received.To(), "Should include To")
   assertMatch(t, "joe@example.com", received.From(), "Should include From")
+}
+
+func TestClientOnUnknown(t *testing.T) {
+  testio, client := setupClient()
+
+  var received string
+  client.OnUnknown(func(msg string) {
+    received = msg
+  })
+
+  testio.PushString("<foobar>hello world!</foobar>")
+  client.Loop()
+
+  should(t, "invoke the unknown listener", func() bool {
+    match, _ := regexp.MatchString("<foobar>hello world!</foobar>", received)
+
+    return match
+  })
 }
 
 func readFixture(filename string, data interface{}) string {

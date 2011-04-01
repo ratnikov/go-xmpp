@@ -1,41 +1,70 @@
 package xmpp
 
+type Listener interface {
+}
+
+type MessageListener struct {
+  callback func(message Message)
+}
+
+type UnknownListener struct {
+  callback func(raw string)
+}
+
+type AnyListener struct {
+  callback func(raw string)
+}
+
 type listenerList struct {
-  anyCallbacks []func(message string)
-  messageCallbacks []func(message Message)
-  unknownCallbacks []func(unknown string)
+  listeners []Listener
+}
+
+func (list *listenerList) Subscribe(listener Listener) {
+  list.listeners = append(list.listeners, listener)
 }
 
 func (list *listenerList) onAny(callback func(string)) {
-  list.anyCallbacks = append(list.anyCallbacks, callback)
+  list.Subscribe(AnyListener{ callback : callback })
 }
 
 func (list *listenerList) onMessage(callback func(Message)) {
-  list.messageCallbacks = append(list.messageCallbacks, callback)
+  list.Subscribe(MessageListener{ callback: callback })
 }
 
 func (list *listenerList) onUnknown(callback func(string)) {
-  list.unknownCallbacks = append(list.unknownCallbacks, callback)
+  list.Subscribe(UnknownListener{ callback : callback })
 }
 
 func (list *listenerList) fireOnMessage(msg *Message) {
-  list.fireOnAny(msg.Raw())
+  list.eachListener(func(l Listener) {
+    fireIfAny(l, msg.Raw())
 
-  for i := range list.messageCallbacks {
-    list.messageCallbacks[i](*msg)
-  }
+    if msg_l, ok := l.(MessageListener); ok {
+      msg_l.callback(*msg)
+    }
+  })
 }
 
 func (list *listenerList) fireOnUnknown(msg string) {
-  list.fireOnAny(msg)
+  list.eachListener(func(l Listener) {
+    fireIfAny(l, msg)
 
-  for i := range list.unknownCallbacks {
-    list.unknownCallbacks[i](msg)
+    if unknown_l, ok := l.(UnknownListener); ok {
+      unknown_l.callback(msg)
+    }
+  })
+}
+
+func fireIfAny(l Listener, msg string) {
+  if any_l, ok := l.(AnyListener); ok {
+    any_l.callback(msg)
+  } else {
+    // not any listener, so nothing to do
   }
 }
 
-func (list *listenerList) fireOnAny(msg string) {
-  for i := range list.anyCallbacks {
-    list.anyCallbacks[i](msg)
+func (list *listenerList) eachListener(callback func(Listener)) {
+  for i := range list.listeners {
+    callback(list.listeners[i])
   }
 }
