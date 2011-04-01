@@ -36,3 +36,7 @@ func assertPanic(t *testing.T, message string, f func()) {
 
   f()
 }
+
+func fail(t *testing.T, message string, args ...interface{}) {
+  t.Fatalf(message, args...)
+}

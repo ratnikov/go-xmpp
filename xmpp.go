@@ -6,7 +6,7 @@ import (
 )
 
 type Message struct {
-  raw, to, from, body string
+  mtype, raw, to, from, body string
 }
 
 func NewMessage(raw string) *Message {
@@ -14,6 +14,10 @@ func NewMessage(raw string) *Message {
   msg := new(Message)
 
   msg.raw = raw
+
+  if msg.mtype, err = parse(raw, "type=\"([^\"]+)\""); err != nil {
+    return nil // failed to parse what type it is
+  }
 
   if msg.to, err = parse(raw, "to=\"([^\"]+)\""); err != nil {
     return nil // failed to parse to
@@ -32,6 +36,10 @@ func NewMessage(raw string) *Message {
 
 func (m *Message) Raw() string {
   return m.raw
+}
+
+func (m *Message) Type() string {
+  return m.mtype
 }
 
 func (m *Message) From() (from string) {

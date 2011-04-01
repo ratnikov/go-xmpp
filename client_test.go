@@ -52,7 +52,7 @@ func setupClient() (io *testIO, client *Client) {
 }
 
 type fixtureMessage struct {
-  To, From, Body, Botid string
+  Type, To, From, Body, Botid string
 }
 
 func TestLoop(t *testing.T) {
@@ -90,12 +90,38 @@ func TestClientOnMessage(t *testing.T) {
   testio, client := setupClient()
 
   testio.PushFixture("message", fixtureMessage{
+    Type: "any-possible-type",
+    Body: "Some stuff",
+    From: "joe",
+    To:   "sam" })
+
+  var received *Message
+
+  client.OnMessage(func(msg Message) {
+    received = &msg
+  })
+
+  client.Loop()
+
+  should(t, "invoked callback", func() bool {
+    return received != nil
+  })
+
+  assertMatch(t, "any-possible-type", received.Type(), "Should capture its type")
+}
+
+func TestClientOnChatMessage(t *testing.T) {
+  testio, client := setupClient()
+
+  testio.PushFixture("message", fixtureMessage{
+    Type: "chat",
     Body: "Hello world!",
     From: "joe@example.com",
     To: "sam@example.com" })
 
   var received *Message
-  client.OnMessage(func(msg Message) {
+
+  client.OnChatMessage(func(msg Message) {
     received = &msg
   })
 
@@ -105,9 +131,37 @@ func TestClientOnMessage(t *testing.T) {
     return received != nil
   })
 
+  assertMatch(t, "chat", received.Type(), "Should be a chat message")
   assertMatch(t, "Hello world!", received.Body(), "Should include the message")
   assertMatch(t, "sam@example.com", received.To(), "Should include To")
   assertMatch(t, "joe@example.com", received.From(), "Should include From")
+}
+
+func TestClientOnErrorMessage(t *testing.T) {
+  testio, client := setupClient()
+
+  testio.PushFixture("message", fixtureMessage{
+    Type: "error",
+    Body: "Something went wrong",
+    From: "joe",
+    To: "sam" })
+
+  testio.PushFixture("message", fixtureMessage{
+    Type: "chat",
+    Body: "Some message" })
+
+  var received *Message
+  client.OnErrorMessage(func(msg Message) {
+    received = &msg
+  })
+
+  client.Loop()
+
+  should(t, "have invoked the callback", func() bool {
+    return received != nil
+  })
+
+  assertMatch(t, "went.*wrong", received.Body(), "Should pick up the error only")
 }
 
 func TestClientOnUnknown(t *testing.T) {

@@ -9,7 +9,11 @@ func TestBadXmppMessage(t *testing.T) {
 }
 
 func TestXmppMessage(t *testing.T) {
-  msg := NewMessage("<message from=\"me\" to=\"you\"><body>Hello world</body></message>")
+  msg := NewMessage("<message type=\"special\" from=\"me\" to=\"you\"><body>Hello world</body></message>")
+
+  should(t, "parse 'type'", func() bool {
+    return msg.Type() == "special"
+  })
 
   should(t, "parse 'from'", func() bool {
     return msg.From() == "me"

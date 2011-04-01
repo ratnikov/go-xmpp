@@ -43,6 +43,14 @@ func (client *Client) OnMessage(callback func(Message)) {
   client.listeners.onMessage(callback)
 }
 
+func (client *Client) OnChatMessage(callback func(Message)) {
+  client.onMessageType("chat", callback)
+}
+
+func (client *Client) OnErrorMessage(callback func(Message)) {
+  client.onMessageType("error", callback)
+}
+
 func (client *Client) OnUnknown(callback func(string)) {
   client.listeners.onUnknown(callback)
 }
@@ -113,6 +121,16 @@ func (client *Client) authenticate(auth *Auth) {
   client.read() // get return as to what we're bound to... or something...
 
   // anyhow, assuming authentication is complete
+}
+
+func (client *Client) onMessageType(mtype string, callback func(Message)) {
+  client.listeners.onMessage(func(msg Message) {
+    if msg.Type() == mtype {
+      callback(msg)
+    } else {
+      // not our type, so doing nothing
+    }
+  })
 }
 
 func (client *Client) read() (string, os.Error) {
