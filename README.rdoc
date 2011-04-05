@@ -1,0 +1,7 @@
+== Overview
+
+Provides go implementation of xmpp protocol.
+
+== License and Copyright
+
+All of the code is copyrighted by Google Inc. and is released under MIT license.
