@@ -19,7 +19,7 @@ func main() {
       log("Got a message from %s to %s: %s\n", msg.From(), msg.To(), msg.Body())
     })
 
-    client.Message("ratnikov@gmail.com", "Hello world!")
+    client.SendChat("ratnikov@gmail.com", "Hello world!")
 
     client.Loop()
   }
